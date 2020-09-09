@@ -17,7 +17,7 @@ repositories {
 val vertxVersion = "3.9.2"
 val junitJupiterVersion = "5.6.0"
 
-val mainVerticleName = "com.firstorion.project.DerickMaloneVertxApp.MainVerticle"
+val mainVerticleName = "com.firstorion.project.DerickMaloneVertxApp.BandsVerticle"
 val watchForChange = "src/**/*"
 val doOnChange = "./gradle classes"
 val launcherClassName = "io.vertx.core.Launcher"
@@ -29,6 +29,7 @@ application {
 dependencies {
   implementation("io.vertx:vertx-web:$vertxVersion")
   implementation("io.vertx:vertx-redis-client:$vertxVersion")
+  implementation("org.redisson:redisson:3.13.4")
   testImplementation("io.vertx:vertx-junit5:$vertxVersion")
   testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }
