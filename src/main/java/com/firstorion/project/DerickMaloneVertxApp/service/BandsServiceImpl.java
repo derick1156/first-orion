@@ -1,121 +1,104 @@
 package com.firstorion.project.DerickMaloneVertxApp.service;
 
 import com.firstorion.project.DerickMaloneVertxApp.domain.Band;
+import com.firstorion.project.DerickMaloneVertxApp.repository.BandsRepository;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
-import org.redisson.api.RMap;
-import org.redisson.api.RedissonClient;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static com.firstorion.project.DerickMaloneVertxApp.utilities.Constants.BAND_KEY;
+import static com.firstorion.project.DerickMaloneVertxApp.utilities.Constants.APPLICATION_JSON_UTF_8;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 public class BandsServiceImpl implements BandsService {
+	private BandsRepository bandsRepository;
 
-	//todo dm remove
-	static Map<Integer, Band> bands = new LinkedHashMap<>();
-
-//	private final Vertx vertx;
-//	private final RedisAPI redisAPI;
-	private final RedissonClient redissonClient;
-
-//	public BandsServiceImpl(Vertx vertx, RedisAPI redisAPI) {
-	public BandsServiceImpl(RedissonClient redissonClient) {
-		this.redissonClient = redissonClient;
-//		this.vertx = vertx;
-//		this.redisAPI = redisAPI;
+	public BandsServiceImpl(BandsRepository bandsRepository) {
+		this.bandsRepository = bandsRepository;
 	}
+
+	//todo dm dont allow put or update of band with same name
 
 	@Override
 	public void getBands(RoutingContext routingContext) {
 		String id = routingContext.request().getParam("id");
+
 		if(null == id) {
-			//todo dm handle for id not found
 			//get all bands
-//			redisAPI.hgetall(BAND_KEY, res -> {
-//				if(res.succeeded()){
-//					System.out.println(res.result().get(0));
-//				} else {
-//					System.out.println("res failed");
-//				}
-//			});
-			RMap bandsMap = redissonClient.getMap(BAND_KEY);
 			routingContext.response()
 					.setStatusCode(HttpResponseStatus.OK.code())
-					.putHeader("content-type", "application/json; charset=utf-8")
-					.end(Json.encodePrettily(bandsMap.readAllValues()));
-//			routingContext.response()
-//					.setStatusCode(HttpResponseStatus.OK.code())
-//					.putHeader("content-type", "application/json; charset=utf-8")
-//					.end(Json.encodePrettily(bands.values()));
-
+					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+					.end(Json.encodePrettily(bandsRepository.getAllBands()));
 		} else {
 			//get single band
-			routingContext.response()
-					.setStatusCode(HttpResponseStatus.OK.code())
-					.putHeader("content-type", "application/json; charset=utf-8")
-					.end(Json.encodePrettily(bands.get(Integer.valueOf(id))));
+			Band band = bandsRepository.getBandById(Integer.valueOf(id));
+			if(null != band) {
+				routingContext.response()
+						.setStatusCode(HttpResponseStatus.OK.code())
+						.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+						.end(Json.encodePrettily(band));
+			} else {
+				//requested ID not found
+				routingContext.response()
+						.setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+						.end();
+			}
 		}
 	}
 
 	@Override
 	public void createBand(RoutingContext routingContext) {
 		Band band = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
-
-		bands.put(band.getId(), band);
-
-		routingContext.response()
-				.setStatusCode(HttpResponseStatus.CREATED.code())
-				.putHeader("content-type", "application/json; charset=utf-8")
-				.end(Json.encodePrettily(band));
+		if(null == bandsRepository.insertBand(band)) {
+			//band did not already exist and a new one was created
+			routingContext.response()
+					.setStatusCode(HttpResponseStatus.CREATED.code())
+					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+					.end(Json.encodePrettily(band));
+		} else {
+			//band already existed and a new one was NOT created
+			routingContext.response()
+					.setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+					.end();
+		}
 	}
 
 	@Override
 	public void updateBand(RoutingContext routingContext) {
-		Band band = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
 		String id = routingContext.request().getParam("id");
+		Band currentBand = null != id ? bandsRepository.getBandById(Integer.valueOf(id)) : null;
 
-		if(null == id || null == bands.get(Integer.valueOf(id))) {
-			//todo dm is this the right response code if requested domain object doesnt exist?
-			routingContext.response().setStatusCode(400).end();
-		} else {
-			Band currentBand = bands.get(Integer.valueOf(id));
-			currentBand.setName(band.getName());
-			bands.put(Integer.valueOf(id), currentBand);
+		if(null == currentBand) {
+			//no id was given, or the id given doesnt exist
 			routingContext.response()
-					//todo dm is this the right response code for updated?
+					.setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+					.end();
+		} else {
+			Band requestBand = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
+			currentBand.setName(requestBand.getName());
+			bandsRepository.updateBand(currentBand);
+
+			routingContext.response()
 					.setStatusCode(HttpResponseStatus.OK.code())
-					.putHeader("content-type", "application/json; charset=utf-8")
-					.end(Json.encodePrettily(bands.get(Integer.valueOf(id))));
+					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+					.end(Json.encodePrettily(currentBand));
 		}
 	}
 
 	@Override
 	public void deleteBand(RoutingContext routingContext) {
 		String id = routingContext.request().getParam("id");
-		//todo dm this freezes up. why?
+		Band currentBand = null != id ? bandsRepository.getBandById(Integer.valueOf(id)) : null;
 
-		if(null == id) {
-			routingContext.response().setStatusCode(400).end();
+		if(null == currentBand) {
+			//no id was given, or the id given doesnt exist
+			routingContext.response().setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end();
 		} else {
-			bands.remove(Integer.valueOf(id));
+			bandsRepository.deleteBand(currentBand.getId());
 			routingContext.response()
-					.setStatusCode(HttpResponseStatus.NO_CONTENT.code());
+					.setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+					.end();
 		}
-	}
-
-	public static void seedBands(RedissonClient redissonClient){
-		Band moodyBlues = new Band("The Moody Blues");
-		Band beatles = new Band("The Beatles");
-		bands.put(moodyBlues.getId(), moodyBlues);
-		bands.put(beatles.getId(), beatles);
-
-		RMap map = redissonClient.getMap(BAND_KEY);
-
-		map.put(moodyBlues.getId(), Json.encode(moodyBlues));
-		map.put(beatles.getId(),Json.encode(beatles));
 	}
 
 }

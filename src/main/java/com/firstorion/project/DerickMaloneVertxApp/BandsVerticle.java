@@ -1,5 +1,6 @@
 package com.firstorion.project.DerickMaloneVertxApp;
 
+import com.firstorion.project.DerickMaloneVertxApp.repository.BandsRepositoryImpl;
 import com.firstorion.project.DerickMaloneVertxApp.service.BandsService;
 import com.firstorion.project.DerickMaloneVertxApp.service.BandsServiceImpl;
 import io.vertx.core.AbstractVerticle;
@@ -25,6 +26,7 @@ public class BandsVerticle extends AbstractVerticle {
   //get it in git
   //get it deployed
   //clean up todos
+    //clean up imports and commented code
   //understand kotlin gradle.kts and why it was created that way
   //BONUS
   //event bus
@@ -38,8 +40,9 @@ public class BandsVerticle extends AbstractVerticle {
 
           Config config = new Config();
           config.useSingleServer()
-                  .setAddress("redis://redis-18311.c239.us-east-1-2.ec2.cloud.redislabs.com:18311")
-
+                  .setAddress("redis://redis-15903.c239.us-east-1-2.ec2.cloud.redislabs.com:15903")
+                  //todo dm encrypt this
+                  .setPassword("6RTKAUW4heD6Rrdkh7lzE7DQqC0JRoc5")
                   .setConnectionPoolSize(1)
           .setConnectionMinimumIdleSize(1);
 
@@ -63,8 +66,8 @@ public class BandsVerticle extends AbstractVerticle {
       public void setupBandsRoute(Router router, RedissonClient redissonClient){
 
           //todo dm remove this when you have redis
-          BandsServiceImpl.seedBands(redissonClient);
-          BandsService bandsService = new BandsServiceImpl(redissonClient);
+          BandsRepositoryImpl.seedBands(redissonClient);
+          BandsService bandsService = new BandsServiceImpl(new BandsRepositoryImpl(redissonClient));
           router.route(BANDS + "*").handler(BodyHandler.create());
           router.route().path(BANDS).method(HttpMethod.GET).handler(bandsService::getBands);
           router.route().path(BANDS + ID_PATH_PARAM).method(HttpMethod.GET).handler(bandsService::getBands);

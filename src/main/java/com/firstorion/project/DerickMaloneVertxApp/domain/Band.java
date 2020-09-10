@@ -3,12 +3,14 @@ package com.firstorion.project.DerickMaloneVertxApp.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //todo dm make sure these annotations are necessary
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Band {
+public class Band implements Serializable {
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private final int id;
@@ -30,6 +32,20 @@ public class Band {
 //        this.artists = artists;
 //    }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Band band = (Band) o;
+        return name.equalsIgnoreCase(band.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
     public int getId() {
         return id;
     }
@@ -42,7 +58,7 @@ public class Band {
         this.name = name;
     }
 
-//    public List<Artist> getArtists() {
+    //    public List<Artist> getArtists() {
 //        return artists;
 //    }
 //
