@@ -17,7 +17,7 @@ repositories {
 val vertxVersion = "3.9.2"
 val junitJupiterVersion = "5.6.0"
 
-val mainVerticleName = "com.firstorion.project.DerickMaloneVertxApp.BandsVerticle"
+val mainVerticleName = "com.firstorion.project.DerickMaloneVertxApp.verticles.MainBandsVerticle"
 val watchForChange = "src/**/*"
 val doOnChange = "./gradle classes"
 val launcherClassName = "io.vertx.core.Launcher"

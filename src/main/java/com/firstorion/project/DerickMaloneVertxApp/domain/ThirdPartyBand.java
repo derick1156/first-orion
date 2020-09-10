@@ -5,26 +5,31 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Instrument {
+public class ThirdPartyBand {
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private final int id;
-    private String name;
+    private String bandName;
 
-    public Instrument(String name) {
+    public ThirdPartyBand(String bandName) {
         this.id = COUNTER.getAndIncrement();
-        this.name = name;
+        this.bandName = bandName;
+    }
+
+    public ThirdPartyBand() {
+        this.id = COUNTER.getAndIncrement();
     }
 
     public int getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getBandName() {
+        return bandName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setBandName(String bandName) {
+        this.bandName = bandName;
     }
+
 }

@@ -16,8 +16,6 @@ public class BandsServiceImpl implements BandsService {
 		this.bandsRepository = bandsRepository;
 	}
 
-	//todo dm dont allow put or update of band with same name
-
 	@Override
 	public void getBands(RoutingContext routingContext) {
 		String id = routingContext.request().getParam("id");
@@ -48,7 +46,7 @@ public class BandsServiceImpl implements BandsService {
 	@Override
 	public void createBand(RoutingContext routingContext) {
 		Band band = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
-		if(null == bandsRepository.insertBand(band)) {
+		if(createBand(band)) {
 			//band did not already exist and a new one was created
 			routingContext.response()
 					.setStatusCode(HttpResponseStatus.CREATED.code())
@@ -58,9 +56,15 @@ public class BandsServiceImpl implements BandsService {
 			//band already existed and a new one was NOT created
 			routingContext.response()
 					.setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
 					.end();
 		}
+	}
+
+	public boolean createBand(Band band){
+		if(isValidBand(band) && !doesBandAlreadyExist(band) && null == bandsRepository.insertBand(band)) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -75,13 +79,21 @@ public class BandsServiceImpl implements BandsService {
 					.end();
 		} else {
 			Band requestBand = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
-			currentBand.setName(requestBand.getName());
-			bandsRepository.updateBand(currentBand);
 
-			routingContext.response()
-					.setStatusCode(HttpResponseStatus.OK.code())
-					.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
-					.end(Json.encodePrettily(currentBand));
+			if(null == requestBand || !isValidBand(requestBand) || doesBandAlreadyExist(requestBand)) {
+				//band in request was invalid
+				routingContext.response()
+						.setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+						.end();
+			} else {
+				currentBand.setName(requestBand.getName());
+				bandsRepository.updateBand(currentBand);
+
+				routingContext.response()
+						.setStatusCode(HttpResponseStatus.OK.code())
+						.putHeader(CONTENT_TYPE, APPLICATION_JSON_UTF_8)
+						.end(Json.encodePrettily(currentBand));
+			}
 		}
 	}
 
@@ -99,6 +111,22 @@ public class BandsServiceImpl implements BandsService {
 					.setStatusCode(HttpResponseStatus.NO_CONTENT.code())
 					.end();
 		}
+	}
+
+	private boolean doesBandAlreadyExist(Band band){
+		for (Band existingBand: bandsRepository.getAllBands()) {
+			if (existingBand.getName().equalsIgnoreCase(band.getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isValidBand(Band band){
+		if(null != band && null != band.getName() && !band.getName().isEmpty()) {
+			return true;
+		}
+		return false;
 	}
 
 }

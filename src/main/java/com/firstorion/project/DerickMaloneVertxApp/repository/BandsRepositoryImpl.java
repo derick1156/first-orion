@@ -9,7 +9,7 @@ import java.util.List;
 import static com.firstorion.project.DerickMaloneVertxApp.utilities.RedisKeys.BAND_KEY;
 
 public class BandsRepositoryImpl implements BandsRepository {
-	private RedissonClient redissonClient;
+	private static RedissonClient redissonClient;
 
 	public BandsRepositoryImpl(RedissonClient redissonClient) {
 		this.redissonClient = redissonClient;
@@ -54,13 +54,17 @@ public class BandsRepositoryImpl implements BandsRepository {
 		bandsMap.remove(Integer.valueOf(id));
 	}
 
-	public static void seedBands(RedissonClient redissonClient){
-		Band moodyBlues = new Band("The Moody Blues");
-		Band beatles = new Band("The Beatles");
+	public static void seedBandRepository(){
+		Band theMoodyBlues = new Band("The Moody Blues");
+		Band theBeatles = new Band("The Beatles");
+		Band thePolice = new Band("The Police");
+
+		redissonClient.getMap(BAND_KEY).clear();
 
 		RMap<Integer, Band> bandsMap = redissonClient.getMap(BAND_KEY);
 
-		bandsMap.put(moodyBlues.getId(),moodyBlues);
-		bandsMap.put(beatles.getId(),beatles);
+		bandsMap.put(theMoodyBlues.getId(),theMoodyBlues);
+		bandsMap.put(theBeatles.getId(),theBeatles);
+		bandsMap.put(thePolice.getId(),thePolice);
 	}
 }
