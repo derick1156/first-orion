@@ -46,6 +46,7 @@ public class BandsServiceImpl implements BandsService {
 	@Override
 	public void createBand(RoutingContext routingContext) {
 		Band band = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
+
 		if(createBand(band)) {
 			//band did not already exist and a new one was created
 			routingContext.response()
@@ -60,6 +61,7 @@ public class BandsServiceImpl implements BandsService {
 		}
 	}
 
+	@Override
 	public boolean createBand(Band band){
 		if(isValidBand(band) && !doesBandAlreadyExist(band) && null == bandsRepository.insertBand(band)) {
 			return true;
@@ -80,7 +82,7 @@ public class BandsServiceImpl implements BandsService {
 		} else {
 			Band requestBand = Json.decodeValue(routingContext.getBodyAsString(), Band.class);
 
-			if(null == requestBand || !isValidBand(requestBand) || doesBandAlreadyExist(requestBand)) {
+			if(!isValidBand(requestBand) || doesBandAlreadyExist(requestBand)) {
 				//band in request was invalid
 				routingContext.response()
 						.setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
@@ -123,10 +125,7 @@ public class BandsServiceImpl implements BandsService {
 	}
 
 	private boolean isValidBand(Band band){
-		if(null != band && null != band.getName() && !band.getName().isEmpty()) {
-			return true;
-		}
-		return false;
+		 return (null != band && null != band.getName() && !band.getName().isEmpty());
 	}
 
 }

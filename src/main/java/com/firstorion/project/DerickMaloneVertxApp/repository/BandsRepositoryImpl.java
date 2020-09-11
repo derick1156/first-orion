@@ -4,6 +4,7 @@ import com.firstorion.project.DerickMaloneVertxApp.domain.Band;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static com.firstorion.project.DerickMaloneVertxApp.utilities.RedisKeys.BAND_KEY;
@@ -22,17 +23,10 @@ public class BandsRepositoryImpl implements BandsRepository {
 	}
 
 	@Override
-	public Band getBandByName(String name) {
-		//todo dm fill this in
-		return null;
-	}
-
-	@Override
 	public List<Band> getAllBands() {
-		//todo dm sort by id or name - https://www.java67.com/2019/06/top-5-sorting-examples-of-comparator-and-comparable-in-java.html
 		RMap<Integer,Band> bandsMap = redissonClient.getMap(BAND_KEY);
 		List<Band> bands = (List)bandsMap.readAllValues();
-//		Collections.sort(bands);
+		bands.sort(Comparator.comparingInt(Band::getId));
 		return bands;
 	}
 
@@ -51,7 +45,7 @@ public class BandsRepositoryImpl implements BandsRepository {
 	@Override
 	public void deleteBand(Integer id) {
 		RMap<Integer,Band> bandsMap = redissonClient.getMap(BAND_KEY);
-		bandsMap.remove(Integer.valueOf(id));
+		bandsMap.remove(id);
 	}
 
 	public static void seedBandRepository(){

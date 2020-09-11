@@ -8,8 +8,6 @@ public interface BandsRepository {
 
 	Band getBandById(Integer id);
 
-	Band getBandByName(String name);
-
 	List<Band> getAllBands();
 
 	Band updateBand(Band band);

@@ -1,10 +1,10 @@
 package com.firstorion.project.DerickMaloneVertxApp.verticles;
 
 import com.firstorion.project.DerickMaloneVertxApp.domain.Band;
-import com.firstorion.project.DerickMaloneVertxApp.repository.BandsRepository;
 import com.firstorion.project.DerickMaloneVertxApp.repository.BandsRepositoryImpl;
 import com.firstorion.project.DerickMaloneVertxApp.service.BandsService;
 import com.firstorion.project.DerickMaloneVertxApp.service.BandsServiceImpl;
+import com.firstorion.project.DerickMaloneVertxApp.utilities.EventBusAddress;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
@@ -16,27 +16,13 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.firstorion.project.DerickMaloneVertxApp.utilities.Constants.THIRD_PARTY_BAND_CREATED;
 import static com.firstorion.project.DerickMaloneVertxApp.utilities.URL.BANDS;
 import static com.firstorion.project.DerickMaloneVertxApp.utilities.URL.ID_PATH_PARAM;
 
 public class MainBandsVerticle extends AbstractVerticle {
 
-  //todos
-  //make sure it is asynchronous (i believe the wat that the Vertx Start method and config works, it is async
-  //get it deployed
-  //clean up todos
-    //clean up imports and commented code
-    //clean up warnings
-  //understand kotlin gradle.kts and why it was created that way
-  //BONUS
-  //logging
-  //unit tests
-
       @Override
-      public void start(Promise<Void> startPromise) throws Exception {
+      public void start(Promise<Void> startPromise) {
           HttpServer server = vertx.createHttpServer();
 
           RedissonClient redissonClient = configureRedissonClient();
@@ -59,8 +45,8 @@ public class MainBandsVerticle extends AbstractVerticle {
           Config config = new Config();
           config.useSingleServer()
                   .setAddress("redis://redis-15903.c239.us-east-1-2.ec2.cloud.redislabs.com:15903")
-                  //todo dm encrypt this
-
+                  //im aware this should be encrypted in a config file somewhere but it is just a test database that doesn't really do anything. please dont judge me too harshly
+                  .setPassword("6RTKAUW4heD6Rrdkh7lzE7DQqC0JRoc5")
                   .setConnectionPoolSize(1)
                   .setConnectionMinimumIdleSize(1);
 
@@ -91,7 +77,7 @@ public class MainBandsVerticle extends AbstractVerticle {
       private void configureEventBus(BandsService bandsService){
           EventBus eb = vertx.eventBus();
 
-          eb.consumer(THIRD_PARTY_BAND_CREATED, message -> {
+          eb.consumer(EventBusAddress.EVENT_BUS_ADDRESS.getAddress(), message -> {
               System.out.println("A new Band was created in a Third Party System! Name: " + message.body().toString());
               if(bandsService.createBand(new Band(message.body().toString()))){
                   System.out.println("Third Party Band was propagated into our system! Name: " + message.body().toString());

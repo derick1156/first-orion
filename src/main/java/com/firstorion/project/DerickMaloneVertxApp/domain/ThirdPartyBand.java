@@ -20,6 +20,7 @@ public class ThirdPartyBand {
         this.id = COUNTER.getAndIncrement();
     }
 
+
     public int getId() {
         return id;
     }

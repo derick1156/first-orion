@@ -1,6 +1,7 @@
 package com.firstorion.project.DerickMaloneVertxApp.service;
 
 import com.firstorion.project.DerickMaloneVertxApp.domain.ThirdPartyBand;
+import com.firstorion.project.DerickMaloneVertxApp.utilities.EventBusAddress;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.Json;
@@ -10,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.firstorion.project.DerickMaloneVertxApp.utilities.Constants.APPLICATION_JSON_UTF_8;
-import static com.firstorion.project.DerickMaloneVertxApp.utilities.Constants.THIRD_PARTY_BAND_CREATED;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 public class ThirdPartyServiceImpl implements ThirdPartyService {
@@ -35,11 +35,10 @@ public class ThirdPartyServiceImpl implements ThirdPartyService {
 		ThirdPartyBand thirdPartyBand = Json.decodeValue(routingContext.getBodyAsString(), ThirdPartyBand.class);
 		if(null != thirdPartyBand && null != thirdPartyBand.getBandName() && !doesBandAlreadyExist(thirdPartyBand)){
 			//band did not already exist and a new one was created
-			//todo dm may need to create a new band based on the name, so the atomic integer counter stays incremental and cant be overridden (would need to do this for bands too
 			thirdPartyBandsMap.put(thirdPartyBand.getId(), thirdPartyBand);
 
 			//publish the fact that a new band was created for whoever cares
-			eventBus.publish(THIRD_PARTY_BAND_CREATED, thirdPartyBand.getBandName());
+			eventBus.publish(EventBusAddress.EVENT_BUS_ADDRESS.getAddress(), thirdPartyBand.getBandName());
 
 			routingContext.response()
 					.setStatusCode(HttpResponseStatus.CREATED.code())

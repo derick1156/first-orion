@@ -40,7 +40,6 @@ dependencies {
   }
 
 tasks.withType<ShadowJar> {
-  //todo dm this is fat jar? need to not do this?
   archiveClassifier.set("fat")
   manifest {
     attributes(mapOf("Main-Verticle" to mainVerticleName))

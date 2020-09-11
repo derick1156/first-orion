@@ -20,4 +20,5 @@ public class TestMainBandsVerticle {
   void verticle_deployed(Vertx vertx, VertxTestContext testContext) throws Throwable {
     testContext.completeNow();
   }
+
 }
